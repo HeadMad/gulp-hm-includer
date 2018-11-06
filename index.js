@@ -24,8 +24,9 @@ const bufer = [];
 function replacer(base) {
 
     
-    return function (str, path) {
+    return function (str) {
         let data;
+        let path = str.replace(config.expr, config.path);
         
         // полный путь до подключаемого файла от дирректории текущего
         let fullPath = pather.join(base, path);
@@ -70,7 +71,7 @@ function replacer(base) {
 function recurReplace (data, base) {
 
     // регулярное выражение по которому будем искать
-    let expr = config.getPattern();
+    let expr = config.expr;
     
     // если совпадений нет
     if (!expr.test(data)) 

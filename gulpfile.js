@@ -1,14 +1,17 @@
 const gulp = require('gulp');
 const part = require('./index.js');
 
-gulp.task('includer', function () {
+gulp.task('default', function () {
     return gulp.src('./test/build.html')
                .pipe(part({
-                   pattern: /<include\s+src="(.+)"\s*\/?>/g
+                   pattern: {
+                       expr: /<include(me)?\s+src="(.+)"\s*\/?>/g,
+                       path: '$2'
+                   }
                 }))
                .pipe(gulp.dest('./'))
 });
 
 gulp.task('watch', function() {
-    gulp.watch('./test/**/*.html', ['includer']);
+    gulp.watch('./test/**/*.html', ['default']);
 });

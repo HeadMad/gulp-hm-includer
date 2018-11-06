@@ -14,7 +14,7 @@ const logPrimary = loger('primary');
 const logInfo =    loger('info');
 
 // буфер путей до файлов, для избежания рекурсивного подключения
-const bufer = [];
+let bufer = [];
 
 /**
  * Ключевая функция
@@ -39,7 +39,7 @@ function replacer(base) {
 
         // если в буфере уже есть такой путь
         if (bufer.indexOf(fullPath) !== -1) {
-            logWarning("This file was included before:", fullPath);
+            logWarning('This file was included before:', fullPath);
             return str;
         }
 
@@ -50,7 +50,7 @@ function replacer(base) {
             // получаем данные подключаемого файла
             data = fs.readFileSync(fullPath, 'utf8');
         } catch (error) {
-            logDanger("Can't open this file:", fullPath);
+            logWarning("Can't open this file:", fullPath);
             return str;
         }
 
@@ -112,6 +112,9 @@ function Includer (params) {
             // сохраняем новые данные в файл
             file.contents = new Buffer(data);
             this.push(file);
+
+            // очищаем буфер
+            bufer = [];
 
         } catch (error) {
             logDanger(error)

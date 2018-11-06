@@ -1,14 +1,15 @@
 const gulp = require('gulp');
-const part = require('./index.js');
+const include = require('./index.js');
 
 gulp.task('default', function () {
     return gulp.src('./test/build.html')
-               .pipe(part({
+               .pipe(include({
                    pattern: {
-                       expr: /<include(me)?\s+src="(.+)"\s*\/?>/g,
-                       path: '$2'
+                       expr: '<include src="{{path}}"/>',
+                       path: '{{path}}',
                    }
                 }))
+               .pipe(include({pattern: 'css-import'}))
                .pipe(gulp.dest('./'))
 });
 

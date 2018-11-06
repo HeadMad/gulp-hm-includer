@@ -1,4 +1,6 @@
 const fs = require('fs');
+const loger = require('hm-loger');
+const logDanger = loger('danger');
 
 const configFields = ['pattern'];
 
@@ -21,12 +23,13 @@ const Config = {
         // если передана строка
         if (type === 'String') {
             try {
-                let pattern = require('./expressions' + value);
+                let pattern = require('./expressions/' + value);
                 this.expr = pattern.expr;
-                this.path = path;
+                this.path = pattern.path;
             } catch (error) {
                 logDanger('a non-existent pattern:', value);
             }
+            return;
         }
 
 
@@ -62,15 +65,15 @@ const Config = {
             return;
         }
 
+        // хеш для замены в выражении
         let path = Date.now();
-        let flag = value.flag || 'g';
 
         // переводим строку в регулярное выражение
         let expr = value.expr.replace(value.path, path)
                              .replace(/\.|\^|\$|\*|\+|\?|\(|\)|\[|\]|\{|\}|\\|\|/g, '\\$&')
-                             .replace(new RegExp(path), '(\\S+)');
+                             .replace(path, '(.+)');
 
-        this.expr = new RegExp(expr, flag);
+        this.expr = new RegExp(expr, 'g');
         this.path = '$1';
 
     },

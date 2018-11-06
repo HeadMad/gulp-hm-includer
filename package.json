@@ -1,0 +1,17 @@
+{
+  "name": "gulp-hm-includer",
+  "version": "1.0.0",
+  "description": "simple gulp plugin for including some files in other",
+  "main": "index.js",
+  "scripts": {
+    "test": "gulp include"
+  },
+  "author": "HeadMad",
+  "license": "ISC",
+  "devDependencies": {
+    "gulp": "^3.9.1"
+  },
+  "dependencies": {
+    "hm-loger": "github:headmad/loger#0.0.1"
+  }
+}

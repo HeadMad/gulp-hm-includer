@@ -16,6 +16,13 @@ const Config = {
 
     },
 
+    writeExpression (expr, path) {
+        this.EXPR = new RegExp('^\\n?((\\s+?)?.*?)(' + expr.source + ')(.*)$', 'gm');
+        this._expr = new RegExp(expr.source);
+        this.expr = expr;
+        this.path = path;
+    },
+
     set pattern(value) {
 
         let type = Object.prototype.toString.call(value).slice(8, -1);
@@ -23,9 +30,8 @@ const Config = {
         // если передана строка
         if (type === 'String') {
             try {
-                let pattern = require('./expressions/' + value);
-                this.expr = pattern.expr;
-                this.path = pattern.path;
+                let pattern = require('./patterns/' + value);
+                this.writeExpression(pattern.expr, pattern.path);
             } catch (error) {
                 logDanger('a non-existent pattern:', value);
             }
@@ -42,8 +48,7 @@ const Config = {
 
         // если регулярное выражение
         if (value.expr instanceof RegExp) {
-            this.expr = value.expr;
-            this.path = value.path;
+            this.writeExpression(value.expr, value.path);
             return;
         }
 
@@ -53,7 +58,7 @@ const Config = {
             return;
         }
 
-        // если не строка
+        // если path не строка
         if (typeof value.path !== 'string') {
             logDanger('Invalid format of property:', 'pattern.path');
             return;
@@ -71,10 +76,9 @@ const Config = {
         // переводим строку в регулярное выражение
         let expr = value.expr.replace(value.path, path)
                              .replace(/\.|\^|\$|\*|\+|\?|\(|\)|\[|\]|\{|\}|\\|\|/g, '\\$&')
-                             .replace(path, '(.+)');
+                             .replace(path, '(.+?)');
 
-        this.expr = new RegExp(expr, 'g');
-        this.path = '$1';
+        this.writeExpression(new RegExp(expr, 'g'), '$1');
 
     },
 

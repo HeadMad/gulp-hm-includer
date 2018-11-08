@@ -16,49 +16,58 @@ const logInfo =    loger('info');
 // буфер путей до файлов, для избежания рекурсивного подключения
 let bufer = [];
 
-/**
- * Ключевая функция
- * @param {string} base Путь до папки с файлом
- * @return функия используемая в регулярном выражении
- */
-function replacer(base) {
 
-    
-    return function (str) {
+
+function replacer (base) {
+    return function (string, before, indent, search, ...args) {
+
+        console.log(arguments);
+
         let data;
-        let path = str.replace(config.expr, config.path);
+        // строка начала вхождения
+        let result = before;
+
+        // получаем путь из подмаски пользователя
+        let path = search.replace(config._expr, config.path);
         
-        // полный путь до подключаемого файла от дирректории текущего
         let fullPath = pather.join(base, path);
-
-        /**
-         * создать кэш файлов
-         * с ключами из сырого пути
-         */
-
-
+        
         // если в буфере уже есть такой путь
         if (bufer.indexOf(fullPath) !== -1) {
             logWarning('This file was included before:', fullPath);
-            return str;
+            return string;
         }
-
+        
         // добавляем в буфер
         bufer.push(fullPath);
-
+        
         try {
             // получаем данные подключаемого файла
             data = fs.readFileSync(fullPath, 'utf8');
         } catch (error) {
             logWarning("Can't open this file:", fullPath);
-            return str;
+            return string;
         }
-
+        
         // путь до дирректории подключённого файла
         let newBase = pather.parse(fullPath).dir;
+        
+        if (indent !== undefined)
+            result += data.replace(/\n/g, '$&' + indent);
 
-        // рекурсивно проверяем, есть ли в файле подключения
-        return recurReplace(data, newBase);
+        else
+            result += data;
+        
+        // вставка после строки
+        let i = args.length - 3;
+        let after = args[i];
+
+        // если есть вставка после строки
+        if (after !== undefined) {
+            result += after;
+        }
+
+        return recurReplace(result, newBase);
     }
 }
 
@@ -69,15 +78,14 @@ function replacer(base) {
  * @param {string} base Путь до дирректории подключенного файла
  */
 function recurReplace (data, base) {
-
     // регулярное выражение по которому будем искать
     let expr = config.expr;
-    
+
     // если совпадений нет
-    if (!expr.test(data)) 
+    if (!config._expr.test(data)) 
         return data;
 
-    return data.replace(expr, replacer(base));
+    return data.replace(config.EXPR, replacer(base));
 };
 
 

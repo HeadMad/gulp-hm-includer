@@ -17,9 +17,9 @@ const Config = {
     },
 
     writeExpression (expr, path) {
-        this.EXPR = new RegExp('^\\n?((\\s+?)?.*?)(' + expr.source + ')(.*)$', 'gm');
-        this._expr = new RegExp(expr.source);
-        this.expr = expr;
+        this.gmExpr = new RegExp('^\\n?((\\s+)?.*?' + expr.source + '.*)$', 'gm');
+        this.expr = new RegExp(expr.source);
+        this.gExpr = expr;
         this.path = path;
     },
 

@@ -17,87 +17,91 @@ const logInfo =    loger('info');
 let bufer = [];
 
 
+/**
+ * 
+ * @param {string} data Данные для поиска подключений
+ * @param {string} dir Путь до дирректории подключенного файла
+ */
+function recurReplace( data, dir ) {
 
-function replacer (base) {
-    return function (string, before, indent, search, ...args) {
+    // если совпадений нет
+    if (!config.expr.test( data ))
+        return data;
 
-        console.log(arguments);
+    let dtd = data.replace(config.gmExpr, firsRoundReplace( dir ));
+    return dtd;
+};
 
-        let data;
-        // строка начала вхождения
-        let result = before;
+/**
+ * Первый круг замены:
+ * построчный разбор
+ * для передачи отступов строк
+ * @param {string} dir путь до папки подключаемого файла
+ */
+function firsRoundReplace( dir ) {
+    return function ( _, string, indent ) {
+        let result;
 
-        // получаем путь из подмаски пользователя
-        let path = search.replace(config._expr, config.path);
+        result = string.replace( config.gExpr, secondRoundReplace( dir, indent ) );
         
-        let fullPath = pather.join(base, path);
-        
-        // если в буфере уже есть такой путь
-        if (bufer.indexOf(fullPath) !== -1) {
-            logWarning('This file was included before:', fullPath);
-            return string;
-        }
-        
-        // добавляем в буфер
-        bufer.push(fullPath);
-        
-        try {
-            // получаем данные подключаемого файла
-            data = fs.readFileSync(fullPath, 'utf8');
-        } catch (error) {
-            logWarning("Can't open this file:", fullPath);
-            return string;
-        }
-        
-        // путь до дирректории подключённого файла
-        let newBase = pather.parse(fullPath).dir;
-        
-        if (indent !== undefined)
-            result += data.replace(/\n/g, '$&' + indent);
-
-        else
-            result += data;
-        
-        // вставка после строки
-        let i = args.length - 3;
-        let after = args[i];
-
-        // если есть вставка после строки
-        if (after !== undefined) {
-            result += after;
-        }
-
-        return recurReplace(result, newBase);
+        return result;
     }
 }
 
 
 /**
- * 
- * @param {string} data Данные для поиска подключений
- * @param {string} base Путь до дирректории подключенного файла
+ * второй круг замены:
+ * получение путей из вхождений
+ * обработка данных из подключаемых файлов
+ * @param {string} dir путь до папки фала из которого идёт подключение
+ * @param {string} indent отступы в начале строки
  */
-function recurReplace (data, base) {
-    // регулярное выражение по которому будем искать
-    let expr = config.expr;
+function secondRoundReplace( dir, indent ) {
+    
+    return function ( string ) {
+        // Путь до файла
+        let path = string.replace( config.expr, config.path );
+        let fullPath = pather.join( dir, path );
+        
+        
+        // если в буфере уже есть такой путь
+        if ( bufer.indexOf(fullPath) !== -1 ) {
+            logWarning( 'This file was included before:', fullPath );
+            return string;
+        }
+        
+        // добавляем в буфер
+        bufer.push( fullPath )
+        let result;
+        try {
+            // получаем данные подключаемого файла
+            result = fs.readFileSync( fullPath, 'utf8' );
+        } catch (error) {
+            logWarning( "Can't open this file:", fullPath );
+            return string;
+        }
+        
+        // путь до дирректории подключённого файла
+        let newBase = pather.parse( fullPath ).dir;
 
-    // если совпадений нет
-    if (!config._expr.test(data)) 
-        return data;
-
-    return data.replace(config.EXPR, replacer(base));
-};
-
+        // отступы строк
+        if (indent !== undefined)
+            result = result.replace( /\n/g, '$&' + indent );
+        
+        return recurReplace( result, newBase );
+    }
+    
+}
 
 // Основная функция плагина
-function Includer (params) {
+function Includer ( params ) {
 
     // проверяем переданные данные в поток
-    return through2(function (file, enc, callback) {
+    return through2(function ( file, enc, callback ) {
 
         // если данных нет
         if (file.isNull()) {
-            callback(null, file);
+            callback( null, file );
             return;
         }
 
@@ -115,21 +119,21 @@ function Includer (params) {
             let data = file.contents.toString();
 
             // проверяем наличие подключений в данных
-            data = recurReplace(data, file.base);
+            data = recurReplace( data, file.base );
 
             // сохраняем новые данные в файл
-            file.contents = new Buffer(data);
+            file.contents = new Buffer( data );
             this.push(file);
 
             // очищаем буфер
             bufer = [];
 
-        } catch (error) {
-            logDanger(error)
+        } catch ( error ) {
+            logDanger( error )
         }
 
         // передаем файл в поток
-        callback(null, file);
+        callback( null, file );
     });
 };
 

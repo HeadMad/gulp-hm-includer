@@ -1,4 +1,4 @@
 module.exports = {
-    expr: /@import\s+(?:url\()?\s*(?:["']?)\s*(.*?)\s*(?:["']?)\s*\)?\s*;/g,
-    path: '$1'
+    expr: /@import +(?:url\()? *(["']?) *(.+?) *\1 *\)? *;/g,
+    path: '$2'
 };

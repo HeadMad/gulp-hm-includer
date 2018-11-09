@@ -1,4 +1,3 @@
-const fs = require('fs');
 const loger = require('hm-loger');
 const logDanger = loger('danger');
 
@@ -17,7 +16,7 @@ const Config = {
     },
 
     writeExpression (expr, path) {
-        this.gmExpr = new RegExp('^\\n?((\\s+)?.*?' + expr.source + '.*)$', 'gm');
+        this.gmExpr = new RegExp('^\\n?(([^\\n\\S]*).*?' + expr.source + '.*)$', 'gm');
         this.expr = new RegExp(expr.source);
         this.gExpr = expr;
         this.path = path;

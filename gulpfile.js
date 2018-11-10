@@ -3,10 +3,12 @@ const include = require('./index.js');
 
 gulp.task('default', function () {
     return gulp.src('./test/build.html')
-               .pipe(include({pattern: 'javascript-include'}))
-               .pipe(include({pattern: 'css-include'}))
-               .pipe(include({pattern: 'html-import'}))
-               .pipe(include({pattern: 'css-import'}))
+               .pipe(include({pattern:[
+                   'javascript-inline',
+                   'css-inline',
+                   'html-import',
+                   'css-import'
+                ]}))
                .pipe(gulp.dest('./'))
 });
 

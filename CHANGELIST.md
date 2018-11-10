@@ -5,3 +5,8 @@
     - css-import
     - html-import
     - php-import
+
+## 0.0.4
+- Добавляем обёртку для вставляемых елементов:
+
+    `pattern.wrap`

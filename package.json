@@ -1,6 +1,6 @@
 {
   "name": "gulp-hm-includer",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "simple gulp plugin for including some files in other",
   "main": "index.js",
   "scripts": {

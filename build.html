@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta http-equiv="X-UA-Compatible" content="ie=edge">
+        <title>Buil page with hm-includer</title>        <style>
+            body {
+                margin: 0;
+                padding: 0;
+            }
+            header {
+                padding: 40px 0;
+            }
+            footer {
+                margin-top: 40px;
+            }
+        </style>
+        <style>
+            @import './css/style.css';
+            @import './css/style2.css';
+        </style>
+</head>
+<body>
+
+    <import href="./parts/header.html"/>
+    <import href="./parts/content.html"/>
+    <import href="./parts/footer.html"/>    <script>
+        (function () {
+        
+            function see() {
+                console.log('O! I see!!!');
+            }
+        
+            let me = see;
+        
+            me();
+            
+        })();
+    </script>
+</body>
+</html>

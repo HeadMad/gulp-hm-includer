@@ -3,6 +3,19 @@ const logDanger = loger('danger');
 
 const configFields = ['pattern'];
 
+function typeOf ( arg ) {
+    return Object.prototype.toString.call(arg).slice(8, -1);
+}
+
+function writeProp (from, to, ...props) {
+    props.forEach(function (prop) {
+        if ( from[prop] === undefined ) {
+            return;
+        }
+        to[prop] = from[prop];
+    });
+}
+
 const Config = {
 
     import: function (params) {
@@ -15,42 +28,46 @@ const Config = {
 
     },
 
-    writeExpression (expr, path) {
-        this.gmExpr = new RegExp('^\\n?(([^\\n\\S]*).*?' + expr.source + '.*)$', 'gm');
-        this.expr = new RegExp(expr.source);
+    writeExpression ( expr ) {
+        this.gmExpr = new RegExp( '^\\n?(([^\\n\\S]*).*?' + expr.source + '.*)$', 'gm' );
+        this.expr = new RegExp( expr.source );
         this.gExpr = expr;
-        this.path = path;
     },
 
     set pattern(value) {
 
-        let type = Object.prototype.toString.call(value).slice(8, -1);
+        let type = typeOf( value );
 
         // если передана строка
         if (type === 'String') {
             try {
                 let pattern = require('./patterns/' + value);
                 this.writeExpression(pattern.expr, pattern.path);
+                writeProp( pattern, this, 'path', 'before', 'after', 'indent' );
             } catch (error) {
                 logDanger('a non-existent pattern:', value);
             }
             return;
         }
-
-
+        
+        
         if (type !== 'Object')
-            return;
-
+        return;
+        
         // если не установлен паттерн или значение пути
         if (!value.expr || !value.path)
-            return;
+        return;
 
+        writeProp( value, this, 'before', 'after', 'indent' );
+
+        
         // если регулярное выражение
         if (value.expr instanceof RegExp) {
-            this.writeExpression(value.expr, value.path);
+            this.writeExpression(value.expr);
+            writeProp( value, this, 'path' );
             return;
         }
-
+        
         // если не строка
         if (typeof value.expr !== 'string') {
             logDanger('Invalid format of property:', 'pattern.expr');
@@ -77,7 +94,9 @@ const Config = {
                              .replace(/\.|\^|\$|\*|\+|\?|\(|\)|\[|\]|\{|\}|\\|\|/g, '\\$&')
                              .replace(path, '(.+?)');
 
-        this.writeExpression(new RegExp(expr, 'g'), '$1');
+        this.writeExpression(new RegExp(expr, 'g'));
+
+        writeProp( {path: '$1'}, this, 'path');
 
     },
 

@@ -43,7 +43,7 @@ function firsRoundReplace( dir ) {
         let result;
 
         result = string.replace( config.gExpr, secondRoundReplace( dir, indent ) );
-        
+
         return result;
     }
 }
@@ -76,6 +76,21 @@ function secondRoundReplace( dir, indent ) {
         try {
             // получаем данные подключаемого файла
             result = fs.readFileSync( fullPath, 'utf8' );
+
+            // если есть внутренние отступы
+            if ( config.indent )
+                result = config.indent + result.replace(/\n/g, '$&' + config.indent);
+
+            if ( config.before )
+                result = config.before + result;
+
+            if ( config.after )
+                result += config.after;
+            
+            // отступы строк
+            if (indent !== undefined)
+                result = result.replace(/\n/g, '$&' + indent);
+
         } catch (error) {
             logWarning( "Can't open this file:", fullPath );
             return string;
@@ -84,10 +99,6 @@ function secondRoundReplace( dir, indent ) {
         // путь до дирректории подключённого файла
         let newBase = pather.parse( fullPath ).dir;
 
-        // отступы строк
-        if (indent !== undefined)
-            result = result.replace( /\n/g, '$&' + indent );
-        
         return recurReplace( result, newBase );
     }
     

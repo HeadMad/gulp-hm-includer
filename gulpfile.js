@@ -4,10 +4,10 @@ const include = require('./index.js');
 gulp.task('default', function () {
     return gulp.src('./test/build.html')
                .pipe(include({pattern:[
-                   'javascript-inline',
-                   'css-inline',
+                //    'javascript-inline',
+                //    'css-inline',
                    'html-import',
-                   'css-import'
+                //    'css-import'
                 ]}))
                .pipe(gulp.dest('./'))
 });

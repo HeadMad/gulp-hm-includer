@@ -24,11 +24,7 @@ let bufer = [];
  */
 function recurReplace( data, dir ) {
 
-    // если совпадений нет
-    if (!config.expr.test( data ))
-        return data;
-
-    let dtd = data.replace(config.gmExpr, firsRoundReplace( dir ));
+    let dtd = data.replace(config.expression, firsRoundReplace( dir ));
     return dtd;
 };
 
@@ -39,25 +35,35 @@ function recurReplace( data, dir ) {
  * @param {string} dir путь до папки подключаемого файла
  */
 function firsRoundReplace( dir ) {
-    return function ( _, string, indent ) {
-        let result;
+    
+    return function ( string, indent, ...search ) {
+        let result = string;
+        let inputs = search.slice(0, -2);
+        
+        console.log(string);
+        logInfo('|' + indent + '|');
 
-        result = string.replace( config.gExpr, secondRoundReplace( dir, indent ) );
+        inputs.forEach(function (input, i) {
+            if (input === undefined)
+                return;
+
+            let pattern = config.patterns[i];
+
+            let path = input.replace(pattern.exprSimple, pattern.path);
+            let fullPath = pather.join(dir, path);
+
+            // если в буфере уже есть такой путь
+            if (bufer.indexOf(fullPath) !== -1) {
+                logWarning('This file was included before:', fullPath);
+                return result;
+            }
+
+            result = result.replace(pattern.expr, secondRoundReplace(fullPath, indent, pattern.wrap));
+        });
 
         return result;
     }
 }
-
-function wrapReplace ( inner ) {
-    return function ( _, indent ) {
-        if (indent) {
-            inner = indent + inner.replace(/\n/g, '$&' + indent);
-        }
-
-        return inner;
-    }
-}
-
 
 /**
  * второй круг замены:
@@ -66,30 +72,20 @@ function wrapReplace ( inner ) {
  * @param {string} dir путь до папки фала из которого идёт подключение
  * @param {string} indent отступы в начале строки
  */
-function secondRoundReplace( dir, indent ) {
+function secondRoundReplace( path, indent, wrap ) {
     
     return function ( string ) {
-        // Путь до файла
-        let path = string.replace( config.expr, config.path );
-        let fullPath = pather.join( dir, path );
-        
-        
-        // если в буфере уже есть такой путь
-        if ( bufer.indexOf(fullPath) !== -1 ) {
-            logWarning( 'This file was included before:', fullPath );
-            return string;
-        }
-        
+
         // добавляем в буфер
-        bufer.push( fullPath )
+        bufer.push( path )
         let result;
         try {
             // получаем данные подключаемого файла
-            result = fs.readFileSync( fullPath, 'utf8' );
+            result = fs.readFileSync( path, 'utf8' );
 
             // если есть внутренние отступы
-            if ( config.wrap ) {
-                result = config.wrap.replace(/([^\n\S]+)?\{\{\}\}/, wrapReplace( result ) );
+            if ( wrap ) {
+                result = wrap.replace(/([^\n\S]+)?\{\{\}\}/, wrapReplace( result ) );
                 
             }
             
@@ -97,17 +93,28 @@ function secondRoundReplace( dir, indent ) {
             if (indent !== undefined)
                 result = result.replace(/\n/g, '$&' + indent);
 
+
         } catch (error) {
-            logWarning( "Can't open this file:", fullPath );
+            logWarning( "Can't open this file:", path );
             return string;
         }
         
         // путь до дирректории подключённого файла
-        let newBase = pather.parse( fullPath ).dir;
+        let newBase = pather.parse( path ).dir;
 
         return recurReplace( result, newBase );
     }
     
+}
+
+function wrapReplace(inner) {
+    return function (_, indent) {
+        if (indent) {
+            inner = indent + inner.replace(/\n/g, '$&' + indent);
+        }
+
+        return inner;
+    }
 }
 
 // Основная функция плагина

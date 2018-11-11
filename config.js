@@ -121,9 +121,8 @@ function transformPattern ( pattern ) {
  */
 function writeExpression( pattern ) {
     const expr = pattern.expr;
-    pattern.gmExpr = new RegExp('^\\n?(([^\\n\\S]*).*?' + expr.source + '.*)$', 'gm');
-    pattern.expr = new RegExp(expr.source);
-    pattern.gExpr = expr;
+    pattern.exprSimple = new RegExp(expr.source);
+    pattern.exprSource = expr.source;
 }
 
 const Config = {
@@ -141,13 +140,33 @@ const Config = {
 
 
     set pattern( value ) {
-        const patterns = getPatterns( value );
-        if ( patterns ) {
-            this.patterns = patterns;
-        }
+        const type = typeOf(value);
+        let stack = [];
+        if (type === 'Array') {
+            value.reduce(function (stack, item) {
+                let result = transformPattern(item);
+                if (result !== false) {
+                    stack.push(result);
+                }
+                return stack;
+            }, stack);
+            
+        } else {
 
-        console.log(patterns);
-    },
+            let result = transformPattern(value);
+            if (result !== false) {
+                stack.push(result);
+            }
+            
+        }
+        
+ 
+        let expr = '^\\n?([^\\n\\S]+)?.*' + stack.map( item => '(' + item.exprSource.replace(/\((?!\?:)/g, '(?:') + ')').join('|') + '.*?$';
+        
+        this.expression = new RegExp(expr, 'gm');
+        this.patterns = stack;
+
+    }
 
 };
 

@@ -1,49 +1,34 @@
 const gulp = require('gulp');
 const include = require('./index.js');
 
-gulp.task('default', function () {
-    return gulp.src('./test/build.html')
-               .pipe(include({pattern:[
-                   'javascript-inline',
-                   'css-inline',
-                   'html-import',
-                   'css-import'
-                ]}))
-               .pipe(gulp.dest('./'))
+const props = {};
+props.pattern = [];
+
+
+// Использование готового шаблона из библиотеки
+props.pattern.push( 'css-inline' );
+
+// Строчный (жесткий) шаблон
+props.pattern.push( {
+    expr: '<import href="$PATH$"/>',
+    path: '$PATH$',
+} );
+
+// Регулярное выражение в качестве шаблона - более гибкое решение
+props.pattern.push( {
+    expr: /<script .*src=(['"])(.+?)\1.*?> *<\/script>/g,
+    path: '$2',
+    wrap: '<script>\n    {{}}\n</script>'
+} );
+
+
+gulp.task( 'default', function () {
+    return gulp.src( './test/build.html' )
+            //    .pipe( include( { pattern: 'css-import' } ) )
+               .pipe( include( props ) )
+               .pipe( gulp.dest('./') )
 });
 
-gulp.task('watch', function() {
-    gulp.watch('./test/**/*.?(html|css)', ['default']);
+gulp.task( 'watch', function () {
+    gulp.watch( './test/**/*.?(html|css|js)', ['default'] );
 });
-
-
-let string = `Lorem ipsum dolor sit amet consectetur adipisicing elit
-        Illo aliquam illum hic quae magnam, dolores est suscipit fugit quo impedit sint,
-    quisquam quaerat temporibus culpa recusandae quod,
-cupiditate consequuntur similique.`;
-
-let bufer = [];
-gulp.task('test', callback => {
-    string.replace(/(dol)|(amet)|(est)|(simi)[^\n]/g, (str, ...search) => {
-        let inputs = search.slice(0,-1);
-        inputs.some((input, i) => {
-            if (input === undefined) {
-                return false;
-            }
-
-            if (bufer.indexOf(input) !== -1) {
-                console.log('This file was included before:', input);
-                return false;
-            }
-
-            bufer.push(input);
-            let expr = new RegExp('^\\n?([^\\n\\S]+)?.*?' + input, 'm');
-
-            console.log(string.match(expr));
-
-
-        });
-        console.log('-----------');
-    })
-    callback();
-})

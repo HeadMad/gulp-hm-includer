@@ -1,5 +1,5 @@
 module.exports = {
-    expr: /<link .*href=(['"])(.+?)\1.*?\/? *>/g,
+    expr: /<link .*href=(['"])(.+?)\1.*?\/? *>/,
     path: '$2',
     wrap: '<style>\n    {{}}\n</style>'
 };

@@ -1,4 +1,4 @@
 module.exports = {
-    expr: /<import +href=(['"]?) *(.+?) *\1 *\/? *>/g,
+    expr: /<import +href=(['"]?) *(.+?) *\1 *\/? *>/,
     path: '$2'
 };

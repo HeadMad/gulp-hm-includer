@@ -24,8 +24,12 @@ let bufer = [];
  */
 function recurReplace( data, dir ) {
 
-    let dtd = data.replace(config.expression, firsRoundReplace( dir ));
-    return dtd;
+    // если нечего искать
+    if (!config.expression) {
+        return data;
+    }
+
+    return data.replace(config.expression, firsRoundReplace( dir ));
 };
 
 /**
@@ -36,82 +40,102 @@ function recurReplace( data, dir ) {
  */
 function firsRoundReplace( dir ) {
     
-    return function ( result, ...args ) {
+    return function ( string, ...args ) {
 
-        let data = args[args.length - 1];
+        let result = string;
         let inputs = args.slice(0, -2);
 
-        // console.log(inputs);
-        // return;
         
-        inputs.some((input, i) => {
+        inputs.some( (input, i) => {
+            
+            // Пропускаем итерацию
             if (input === undefined) {
                 return false;
             }
-
             
+            // получаем паттерн вхождения
             let pattern = config.patterns[i];
-            let exprSource = '^\\n?([^\\n\\S]+)?.*?' + input;
-            let expr = new RegExp(exprSource, 'm');
-            let indent = expr.exec(data)[1];
-            let path = input.replace(pattern.exprSimple, pattern.path);
+            
+            // полный путь до файла
+            let path = input.replace(pattern.expr, pattern.path);
             let fullPath = pather.join(dir, path);
-
-            // если такой путь уже был подключенё
+            
+            // если такой путь уже был подключен
             if (bufer.indexOf(fullPath) !== -1) {
-                logWarning('This file was included before:', fullPath);
+                logWarning('This file was included before:', "'" + fullPath + "'");
                 return false;
             }
-
+            
+            // добавляем путь в буфер
             bufer.push(fullPath);
-
-
-            result = secondRoundReplace (fullPath, indent, pattern);
+            
+            // Вычисляем индентацию
+            let exprSource = '^\\n?([^\\n\\S]+)?.*?' + input;
+            let expr = new RegExp(exprSource, 'm');
+            let data = args[args.length - 1];
+            let indent = expr.exec(data)[1];
+            
+            // Получаем данные файла
+            result = getFileData (fullPath, indent, pattern);
             return true;
         });
+
+        if (result === false) {
+            return string;
+        }
 
         return result;
     }
 }
 
-function secondRoundReplace (path, indent, pattern) {
+function getFileData (path, indent, pattern) {
 
     let result;
+
+    // если такого файла не существует
     try {
-        // получаем данные подключаемого файла
-        result = fs.readFileSync(path, 'utf8');
-
-        // если есть внутренние отступы
-        if (pattern.wrap) {
-            result = pattern.wrap.replace(/([^\n\S]+)?\{\{\}\}/, wrapReplace(result));
-
-        }
-
-        // отступы строк
-        if (indent !== undefined)
-            result = result.replace(/\n/g, '$&' + indent);
-
-
+        fs.lstatSync(path).isFile();
     } catch (error) {
-        logWarning("Can't open this file:", path);
-        return string;
+        logWarning("Can't open this file:", "'" + path + "'");
+        return false;
     }
+
+    // получаем данные подключаемого файла
+    result = fs.readFileSync(path, 'utf8');
+
+    // если файл пуст
+    if (result === undefined) {
+        return '';
+    }
+
+    // если есть внутренние отступы
+    if (pattern.wrap) {
+        result = pattern.wrap.replace( /([^\n\S]+)?\{\{\}\}/, wrapReplace( result ));
+    }
+
+    // отступы строк
+    if (indent) {
+        result = result.replace(/\n/g, '$&' + indent);
+    }
+
 
     // путь до дирректории подключённого файла
     let newBase = pather.parse(path).dir;
 
     return recurReplace(result, newBase);
-
-
 }
 
-function wrapReplace(inner) {
-    return function (_, indent) {
-        if (indent) {
-            inner = indent + inner.replace(/\n/g, '$&' + indent);
-        }
+/**
+ * Обработчик обёртки, добавляющий индентацию
+ * @param {string} data содержиме файла для обёртки
+ */
+function wrapReplace ( data ) {
 
-        return inner;
+    return function ( _, indent) {
+        if (indent !== undefined) {
+            data = indent + data.replace(/\n/g, '$&' + indent);
+        }
+        return data;
     }
 }
 
@@ -139,6 +163,10 @@ function Includer ( params ) {
 
             // преобразуем данные к строке
             let data = file.contents.toString();
+
+            console.log(file.history);
+            // добавляем файл в буфер
+            bufer.push(file.history[0]);
 
             // проверяем наличие подключений в данных
             data = recurReplace( data, file.base );

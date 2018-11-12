@@ -7,14 +7,6 @@ function typeOf ( arg ) {
     return Object.prototype.toString.call(arg).slice(8, -1);
 }
 
-function writeProp (from, to, ...props) {
-    props.forEach(function (prop) {
-        if ( from[prop] === undefined ) {
-            return;
-        }
-        to[prop] = from[prop];
-    });
-}
 
 /**
  * Получаем массив паттернов
@@ -161,7 +153,7 @@ const Config = {
         }
         
  
-        let expr = '^\\n?([^\\n\\S]+)?.*' + stack.map( item => '(' + item.exprSource.replace(/\((?!\?:)/g, '(?:') + ')').join('|') + '.*?$';
+        let expr = stack.map( item => '(' + item.exprSource.replace(/\((?!\?:)/g, '(?:') + ')').join('|');
         
         this.expression = new RegExp(expr, 'gm');
         this.patterns = stack;

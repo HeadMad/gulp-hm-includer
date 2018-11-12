@@ -36,75 +36,73 @@ function recurReplace( data, dir ) {
  */
 function firsRoundReplace( dir ) {
     
-    return function ( string, indent, ...search ) {
-        let result = string;
-        let inputs = search.slice(0, -2);
+    return function ( result, ...args ) {
+
+        let data = args[args.length - 1];
+        let inputs = args.slice(0, -2);
+
+        // console.log(inputs);
+        // return;
         
-        console.log(string);
-        logInfo('|' + indent + '|');
+        inputs.some((input, i) => {
+            if (input === undefined) {
+                return false;
+            }
 
-        inputs.forEach(function (input, i) {
-            if (input === undefined)
-                return;
-
+            
             let pattern = config.patterns[i];
-
+            let exprSource = '^\\n?([^\\n\\S]+)?.*?' + input;
+            let expr = new RegExp(exprSource, 'm');
+            let indent = expr.exec(data)[1];
             let path = input.replace(pattern.exprSimple, pattern.path);
             let fullPath = pather.join(dir, path);
 
-            // если в буфере уже есть такой путь
+            // если такой путь уже был подключенё
             if (bufer.indexOf(fullPath) !== -1) {
                 logWarning('This file was included before:', fullPath);
-                return result;
+                return false;
             }
 
-            result = result.replace(pattern.expr, secondRoundReplace(fullPath, indent, pattern.wrap));
+            bufer.push(fullPath);
+
+
+            result = secondRoundReplace (fullPath, indent, pattern);
+            return true;
         });
 
         return result;
     }
 }
 
-/**
- * второй круг замены:
- * получение путей из вхождений
- * обработка данных из подключаемых файлов
- * @param {string} dir путь до папки фала из которого идёт подключение
- * @param {string} indent отступы в начале строки
- */
-function secondRoundReplace( path, indent, wrap ) {
-    
-    return function ( string ) {
+function secondRoundReplace (path, indent, pattern) {
 
-        // добавляем в буфер
-        bufer.push( path )
-        let result;
-        try {
-            // получаем данные подключаемого файла
-            result = fs.readFileSync( path, 'utf8' );
+    let result;
+    try {
+        // получаем данные подключаемого файла
+        result = fs.readFileSync(path, 'utf8');
 
-            // если есть внутренние отступы
-            if ( wrap ) {
-                result = wrap.replace(/([^\n\S]+)?\{\{\}\}/, wrapReplace( result ) );
-                
-            }
-            
-            // отступы строк
-            if (indent !== undefined)
-                result = result.replace(/\n/g, '$&' + indent);
+        // если есть внутренние отступы
+        if (pattern.wrap) {
+            result = pattern.wrap.replace(/([^\n\S]+)?\{\{\}\}/, wrapReplace(result));
 
-
-        } catch (error) {
-            logWarning( "Can't open this file:", path );
-            return string;
         }
-        
-        // путь до дирректории подключённого файла
-        let newBase = pather.parse( path ).dir;
 
-        return recurReplace( result, newBase );
+        // отступы строк
+        if (indent !== undefined)
+            result = result.replace(/\n/g, '$&' + indent);
+
+
+    } catch (error) {
+        logWarning("Can't open this file:", path);
+        return string;
     }
-    
+
+    // путь до дирректории подключённого файла
+    let newBase = pather.parse(path).dir;
+
+    return recurReplace(result, newBase);
+
+
 }
 
 function wrapReplace(inner) {

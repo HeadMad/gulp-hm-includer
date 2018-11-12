@@ -16,14 +16,13 @@ const logInfo =    loger('info');
 // буфер путей до файлов, для избежания рекурсивного подключения
 let bufer = [];
 
-
 /**
- * 
+ * Рекурсивная обработка данных из подключаемых файлов
  * @param {string} data Данные для поиска подключений
  * @param {string} dir Путь до дирректории подключенного файла
  */
 function recurReplace( data, dir ) {
-
+    
     // если нечего искать
     if (!config.expression) {
         return data;
@@ -92,20 +91,18 @@ function getFileData (path, indent, pattern) {
 
     let result;
 
-    // если такого файла не существует
     try {
-        fs.lstatSync(path).isFile();
-    } catch (error) {
-        logWarning("Can't open this file:", "'" + path + "'");
-        return false;
-    }
-
-    // получаем данные подключаемого файла
-    result = fs.readFileSync(path, 'utf8');
-
-    // если файл пуст
-    if (result === undefined) {
-        return '';
+        // получаем данные подключаемого файла
+        result = fs.readFileSync(path, 'utf8');
+    } catch (e) {
+        // если такого файла не существует
+        try {
+            fs.lstatSync(path).isFile();
+            return '';
+        } catch (e) {
+            logWarning("Can't open this file:", "'" + path + "'");
+            return false;
+        }
     }
 
     // если есть внутренние отступы
@@ -115,7 +112,7 @@ function getFileData (path, indent, pattern) {
 
     // отступы строк
     if (indent) {
-        result = result.replace(/\n/g, '$&' + indent);
+        result = result.replace(/\n/g, '\n' + indent);
     }
 
 
@@ -133,7 +130,7 @@ function wrapReplace ( data ) {
 
     return function ( _, indent) {
         if (indent !== undefined) {
-            data = indent + data.replace(/\n/g, '$&' + indent);
+            data = indent + data.replace(/\n/g, '\n' + indent);
         }
         return data;
     }
@@ -164,7 +161,6 @@ function Includer ( params ) {
             // преобразуем данные к строке
             let data = file.contents.toString();
 
-            console.log(file.history);
             // добавляем файл в буфер
             bufer.push(file.history[0]);
 

@@ -7,11 +7,12 @@ props.pattern = [];
 
 // Использование готового шаблона из библиотеки
 props.pattern.push( 'css-inline' );
+props.pattern.push('css-import' );
 
 // Строчный (жесткий) шаблон
 props.pattern.push( {
     expr: '<import href="$PATH$"/>',
-    path: '$PATH$',
+    path: '$PATH$'
 } );
 
 // Регулярное выражение в качестве шаблона - более гибкое решение
@@ -23,10 +24,9 @@ props.pattern.push( {
 
 
 gulp.task( 'default', function () {
-    return gulp.src( './test/build.html' )
-            //    .pipe( include( { pattern: 'css-import' } ) )
-               .pipe( include( props ) )
-               .pipe( gulp.dest('./') )
+     return gulp.src( './test/build.html' )
+                .pipe( include( props ) )
+                .pipe( gulp.dest('./') )
 });
 
 gulp.task( 'watch', function () {

@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta http-equiv="X-UA-Compatible" content="ie=edge">
+        <title>Build page with hm-includer</title>
+        <style>
+            /*  CSS-file 1 */
+            body {
+                margin: 0;
+                padding: 0;
+            }
+            
+            /*  CSS-file 2 */
+            header {
+                padding: 40px 0;
+            }
+            footer {
+                margin-top: 40px;
+            }
+        </style>
+        
+</head>
+<body>
+    <header>
+        <a href="#" class="logo">HeadMad Includer</a>
+        <ul class="menu">
+            <li class="menu__item"><a href="#">Главная</a></li>
+            <li class="menu__item"><a href="#">Блог</a></li>
+            <li class="menu__item"><a href="#">Форум</a></li>
+            <li class="menu__item"><a href="#">Контакты</a></li>
+            First
+        </ul>
+        
+        <script>
+            (function () {
+            
+                function see() {
+                    console.log('O! I see!!!');
+                }
+            
+                let me = see;
+            
+                me();
+                
+            })();
+        </script>
+    </header>
+    <main>
+        <h1>Главная страница</h1>
+        <p>
+            Далеко-далеко за словесными горами в стране гласных и согласных живут рыбные тексты. Предложения семантика обеспечивает пустился, всемогущая путь наш злых прямо все послушавшись рукопись приставка страна рукописи, продолжил своих, lorem деревни последний!
+        </p>
+        <p>
+            Lorem ipsum dolor sit amet consectetur adipisicing elit. Illo aliquam illum hic quae magnam, dolores est suscipit fugit quo impedit sint, quisquam quaerat temporibus culpa recusandae quod, cupiditate consequuntur similique.
+        </p>
+    </main>
+    <footer>
+        © HeadMad, 2018
+        <br> Все права всему народу
+    </footer>
+    
+    
+</body>
+</html>

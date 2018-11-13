@@ -69,7 +69,7 @@ function firsRoundReplace( dir ) {
             bufer.push(fullPath);
             
             // Вычисляем индентацию
-            let exprSource = '^\\n?([^\\n\\S]+)?.*?' + input;
+            let exprSource = '^\\n?([^\\n\\S]+)?.*?' + input.replace(/\.|\^|\$|\*|\+|\?|\(|\)|\[|\]|\{|\}|\\|\|/g, '\\$&');
             let expr = new RegExp(exprSource, 'm');
             let data = args[args.length - 1];
             let indent = expr.exec(data)[1];

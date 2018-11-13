@@ -23,6 +23,8 @@ props.pattern.push( {
 } );
 
 
+
+
 gulp.task( 'default', function () {
      return gulp.src( './test/build.html' )
                 .pipe( include( props ) )
